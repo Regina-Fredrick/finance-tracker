@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinTrack - Login</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+
+        .auth-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            width: 100%;
+            max-width: 420px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
+        }
+
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .logo h1 {
+            font-size: 28px;
+            color: #1a1a2e;
+        }
+
+        .logo h1 span { color: #00d4aa; }
+
+        .logo p {
+            font-size: 14px;
+            color: #888;
+            margin-top: 6px;
+        }
+
+        .tabs {
+            display: flex;
+            background: #f0f2f5;
+            border-radius: 10px;
+            padding: 4px;
+            margin-bottom: 28px;
+        }
+
+        .tab {
+            flex: 1;
+            text-align: center;
+            padding: 10px;
+            border-radius: 8px;
+            font-size: 14px;
+            cursor: pointer;
+            color: #888;
+            transition: all 0.2s;
+        }
+
+        .tab.active {
+            background: white;
+            color: #1a1a2e;
+            font-weight: 600;
+        }
+
+        .form-group { margin-bottom: 16px; }
+
+        .form-group label {
+            display: block;
+            font-size: 13px;
+            color: #555;
+            margin-bottom: 6px;
+            font-weight: 500;
+        }
+
+        .form-group input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1.5px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .form-group input:focus { border-color: #00d4aa; }
+
+        .btn {
+            width: 100%;
+            padding: 13px;
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 8px;
+            transition: background 0.2s;
+        }
+
+        .btn:hover { background: #00d4aa; color: #1a1a2e; }
+
+        .error {
+            background: #fde8e8;
+            color: #e17055;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        .success {
+            background: #e8f8f0;
+            color: #00b894;
+            padding: 10px 14px;
+            border-radius: 8px;
+            font-size: 13px;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        #register-form { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="auth-container">
+    <div class="logo">
+        <h1>💰 Fin<span>Track</span></h1>
+        <p>Your personal finance manager</p>
+    </div>
+
+    <div class="tabs">
+        <div class="tab active" onclick="showTab('login')">Login</div>
+        <div class="tab" onclick="showTab('register')">Register</div>
+    </div>
+
+    <!-- Login Form -->
+    <div id="login-form">
+        <div class="error" id="login-error"></div>
+        <div class="form-group">
+            <label>Email address</label>
+            <input type="email" id="login-email" placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="login-password" placeholder="Your password">
+        </div>
+        <button class="btn" onclick="login()">Login</button>
+    </div>
+
+    <!-- Register Form -->
+    <div id="register-form">
+        <div class="error" id="register-error"></div>
+        <div class="success" id="register-success"></div>
+        <div class="form-group">
+            <label>Full name</label>
+            <input type="text" id="reg-name" placeholder="Regina Fredrick">
+        </div>
+        <div class="form-group">
+            <label>Email address</label>
+            <input type="email" id="reg-email" placeholder="you@email.com">
+        </div>
+        <div class="form-group">
+            <label>Password</label>
+            <input type="password" id="reg-password" placeholder="Create a password">
+        </div>
+        <button class="btn" onclick="register()">Create Account</button>
+    </div>
+</div>
+
+<script>
+    const API = "http://127.0.0.1:5000";
+
+    function showTab(tab) {
+        document.getElementById("login-form").style.display = tab === "login" ? "block" : "none";
+        document.getElementById("register-form").style.display = tab === "register" ? "block" : "none";
+        document.querySelectorAll(".tab").forEach((t, i) => {
+            t.classList.toggle("active", (tab === "login" && i === 0) || (tab === "register" && i === 1));
+        });
+    }
+
+    async function login() {
+        const email = document.getElementById("login-email").value;
+        const password = document.getElementById("login-password").value;
+
+        if (!email || !password) {
+            showError("login-error", "Please fill in all fields.");
+            return;
+        }
+
+        const res = await fetch(`${API}/users/login`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            localStorage.setItem("user_id", data.user_id);
+            localStorage.setItem("user_name", data.name);
+            window.location.href = "/app";
+        } else {
+            showError("login-error", data.error);
+        }
+    }
+
+    async function register() {
+        const full_name = document.getElementById("reg-name").value;
+        const email = document.getElementById("reg-email").value;
+        const password = document.getElementById("reg-password").value;
+
+        if (!full_name || !email || !password) {
+            showError("register-error", "Please fill in all fields.");
+            return;
+        }
+
+        const res = await fetch(`${API}/users/register`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ full_name, email, password })
+        });
+
+        const data = await res.json();
+
+        if (res.ok) {
+            document.getElementById("register-success").style.display = "block";
+            document.getElementById("register-success").textContent = "Account created! You can now login.";
+            setTimeout(() => showTab("login"), 2000);
+        } else {
+            showError("register-error", data.error);
+        }
+    }
+
+    function showError(id, message) {
+        const el = document.getElementById(id);
+        el.style.display = "block";
+        el.textContent = message;
+    }
+
+    // Redirect to dashboard if already logged in
+    if (localStorage.getItem("user_id")) {
+        window.location.href = "/app";
+    }
+</script>
+
+</body>
+</html>

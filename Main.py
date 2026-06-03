@@ -1,5 +1,6 @@
 import mysql.connector
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, send_from_directory
+from AI import generate_insights
 
 def get_connection():
     return mysql.connector.connect(
@@ -10,14 +11,14 @@ def get_connection():
     )
 
 app = Flask(__name__)
-from flask import send_from_directory
+
+@app.route("/")
+def index():
+    return send_from_directory(".", "login.html")
 
 @app.route("/app")
 def frontend():
     return send_from_directory(".", "index.html")
-@app.route("/")
-def home():
-    return "Finance Tracker API is running"
 
 @app.route("/test-db")
 def test_db():
@@ -114,6 +115,7 @@ def get_expenses(user_id):
     expenses = cursor.fetchall()
     conn.close()
     return jsonify(expenses)
+
 @app.route("/budgets", methods=["POST"])
 def add_budget():
     data = request.get_json()
@@ -143,34 +145,31 @@ def get_budgets(user_id):
     budgets = cursor.fetchall()
     conn.close()
     return jsonify(budgets)
+
 @app.route("/dashboard/<int:user_id>", methods=["GET"])
 def dashboard(user_id):
     month = request.args.get("month", "2025-06")
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
-    # Total income for the month
     cursor.execute(
         "SELECT COALESCE(SUM(amount), 0) AS total_income FROM income WHERE user_id = %s AND DATE_FORMAT(income_date, '%Y-%m') = %s",
         (user_id, month)
     )
     total_income = float(cursor.fetchone()["total_income"])
 
-    # Total expenses for the month
     cursor.execute(
         "SELECT COALESCE(SUM(amount), 0) AS total_expenses FROM expenses WHERE user_id = %s AND DATE_FORMAT(expense_date, '%Y-%m') = %s",
         (user_id, month)
     )
     total_expenses = float(cursor.fetchone()["total_expenses"])
 
-    # Expenses by category
     cursor.execute(
         "SELECT category, COALESCE(SUM(amount), 0) AS spent FROM expenses WHERE user_id = %s AND DATE_FORMAT(expense_date, '%Y-%m') = %s GROUP BY category",
         (user_id, month)
     )
     by_category = cursor.fetchall()
 
-    # Budget status
     cursor.execute(
         "SELECT * FROM budgets WHERE user_id = %s AND month_year = %s",
         (user_id, month)
@@ -197,12 +196,12 @@ def dashboard(user_id):
         "expenses_by_category": [{"category": c["category"], "spent": float(c["spent"])} for c in by_category],
         "budget_status": budget_status
     })
-from AI import generate_insights
 
 @app.route("/insights/<int:user_id>", methods=["GET"])
 def get_insights(user_id):
     month = request.args.get("month", "2025-06")
     insights = generate_insights(user_id, month)
     return jsonify(insights)
+
 if __name__ == "__main__":
     app.run(debug=True)
