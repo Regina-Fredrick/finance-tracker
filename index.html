@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Finance Tracker</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Segoe UI', sans-serif;
+            background: #f0f2f5;
+            color: #333;
+        }
+
+        nav {
+            background: #1a1a2e;
+            color: white;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        nav h1 { font-size: 20px; color: #00d4aa; }
+
+        nav span { font-size: 14px; color: #aaa; }
+
+        .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+
+        .metrics {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .metric-card .label {
+            font-size: 12px;
+            color: #888;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+        }
+
+        .metric-card .value {
+            font-size: 24px;
+            font-weight: 600;
+            color: #1a1a2e;
+        }
+
+        .metric-card .value.green { color: #00b894; }
+        .metric-card .value.red { color: #e17055; }
+
+        .grid2 {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .card {
+            background: white;
+            border-radius: 12px;
+            padding: 20px;
+        }
+
+        .card h3 {
+            font-size: 14px;
+            color: #888;
+            text-transform: uppercase;
+            margin-bottom: 16px;
+        }
+
+        .insight {
+            display: flex;
+            gap: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 10px;
+            font-size: 14px;
+        }
+
+        .insight.positive { background: #e8f8f0; color: #00b894; }
+        .insight.advice { background: #fff3e0; color: #e67e22; }
+        .insight.warning { background: #fff3e0; color: #e67e22; }
+        .insight.danger { background: #fde8e8; color: #e17055; }
+        .insight.prediction { background: #e8f0fe; color: #3b5bdb; }
+        .insight.alert { background: #fde8e8; color: #e17055; }
+
+        .budget-row { margin-bottom: 14px; }
+
+        .budget-row .budget-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 13px;
+            margin-bottom: 6px;
+        }
+
+        .budget-bar-bg {
+            height: 8px;
+            background: #f0f2f5;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+
+        .budget-bar {
+            height: 8px;
+            border-radius: 4px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 14px;
+        }
+
+        th {
+            text-align: left;
+            padding: 10px;
+            background: #f8f9fa;
+            color: #888;
+            font-size: 12px;
+            text-transform: uppercase;
+        }
+
+        td { padding: 10px; border-bottom: 1px solid #f0f2f5; }
+
+        .badge {
+            font-size: 11px;
+            padding: 3px 8px;
+            border-radius: 10px;
+            font-weight: 600;
+        }
+
+        .badge.income { background: #e8f8f0; color: #00b894; }
+        .badge.expense { background: #fde8e8; color: #e17055; }
+
+        .form-row {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            font-size: 14px;
+            outline: none;
+        }
+
+        input:focus, select:focus { border-color: #00d4aa; }
+
+        button {
+            background: #1a1a2e;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            width: 100%;
+            margin-top: 8px;
+        }
+
+        button:hover { background: #00d4aa; color: #1a1a2e; }
+
+        .grid3 {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+    </style>
+</head>
+<body>
+
+<nav>
+    <h1>💰 Finance_Tracker</h1>
+    <span id="welcome-msg">Welcome, Regina</span>
+</nav>
+
+<div class="container">
+
+    <!-- Metrics -->
+    <div class="metrics">
+        <div class="metric-card">
+            <div class="label">Total Income</div>
+            <div class="value green" id="total-income">KES 0</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Total Expenses</div>
+            <div class="value red" id="total-expenses">KES 0</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Savings</div>
+            <div class="value green" id="savings">KES 0</div>
+        </div>
+        <div class="metric-card">
+            <div class="label">Savings Rate</div>
+            <div class="value" id="savings-rate">0%</div>
+        </div>
+    </div>
+
+    <!-- Charts -->
+    <div class="grid2">
+        <div class="card">
+            <h3>Expenses by Category</h3>
+            <canvas id="pieChart" height="220"></canvas>
+        </div>
+        <div class="card">
+            <h3>Budget Status</h3>
+            <div id="budget-status"></div>
+        </div>
+    </div>
+
+    <!-- AI Insights -->
+    <div class="card" style="margin-bottom: 24px;">
+        <h3>AI Insights</h3>
+        <div id="insights-container"></div>
+    </div>
+
+    <!-- Forms + Transactions -->
+    <div class="grid3">
+        <div class="card">
+            <h3>Add Income</h3>
+            <div class="form-row">
+                <input type="text" id="income-source" placeholder="Source (e.g. Salary)">
+                <input type="number" id="income-amount" placeholder="Amount (KES)">
+            </div>
+            <input type="date" id="income-date" style="margin-bottom:12px;">
+            <button onclick="addIncome()">Add Income</button>
+        </div>
+
+        <div class="card">
+            <h3>Add Expense</h3>
+            <div class="form-row">
+                <select id="expense-category">
+                    <option>Food</option>
+                    <option>Transport</option>
+                    <option>Rent</option>
+                    <option>Entertainment</option>
+                    <option>Shopping</option>
+                    <option>Utilities</option>
+                </select>
+                <input type="number" id="expense-amount" placeholder="Amount (KES)">
+            </div>
+            <div class="form-row">
+                <input type="date" id="expense-date">
+                <input type="text" id="expense-desc" placeholder="Description">
+            </div>
+            <button onclick="addExpense()">Add Expense</button>
+        </div>
+
+        <div class="card">
+            <h3>Set Budget</h3>
+            <select id="budget-category" style="margin-bottom:12px;">
+                <option>Food</option>
+                <option>Transport</option>
+                <option>Rent</option>
+                <option>Entertainment</option>
+                <option>Shopping</option>
+                <option>Utilities</option>
+            </select>
+            <input type="number" id="budget-amount" placeholder="Budget Amount (KES)" style="margin-bottom:12px;">
+            <button onclick="addBudget()">Set Budget</button>
+        </div>
+    </div>
+
+    <!-- Transactions Table -->
+    <div class="card">
+        <h3>Recent Transactions</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Category / Source</th>
+                    <th>Description</th>
+                    <th>Amount</th>
+                </tr>
+            </thead>
+            <tbody id="transactions-body"></tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    const USER_ID = 1;
+    const MONTH = "2025-06";
+    const API = "http://127.0.0.1:5000";
+
+    async function loadDashboard() {
+        const res = await fetch(`${API}/dashboard/${USER_ID}?month=${MONTH}`);
+        const data = await res.json();
+
+        document.getElementById("total-income").textContent = `KES ${data.total_income.toLocaleString()}`;
+        document.getElementById("total-expenses").textContent = `KES ${data.total_expenses.toLocaleString()}`;
+        document.getElementById("savings").textContent = `KES ${data.savings.toLocaleString()}`;
+        document.getElementById("savings-rate").textContent = `${data.savings_rate}%`;
+
+        // Pie chart
+        const labels = data.expenses_by_category.map(e => e.category);
+        const values = data.expenses_by_category.map(e => e.spent);
+        new Chart(document.getElementById("pieChart"), {
+            type: "doughnut",
+            data: {
+                labels,
+                datasets: [{ data: values, backgroundColor: ["#00b894","#0984e3","#e17055","#6c5ce7","#fdcb6e","#fd79a8"] }]
+            },
+            options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+        });
+
+        // Budget status bars
+        const budgetDiv = document.getElementById("budget-status");
+        budgetDiv.innerHTML = data.budget_status.map(b => {
+            const color = b.percent_used >= 100 ? "#e17055" : b.percent_used >= 80 ? "#fdcb6e" : "#00b894";
+            return `
+                <div class="budget-row">
+                    <div class="budget-header">
+                        <span>${b.category}</span>
+                        <span>KES ${b.spent.toLocaleString()} / ${b.budget.toLocaleString()}</span>
+                    </div>
+                    <div class="budget-bar-bg">
+                        <div class="budget-bar" style="width:${Math.min(b.percent_used, 100)}%; background:${color};"></div>
+                    </div>
+                </div>`;
+        }).join("");
+    }
+
+    async function loadInsights() {
+        const res = await fetch(`${API}/insights/${USER_ID}?month=${MONTH}`);
+        const insights = await res.json();
+        document.getElementById("insights-container").innerHTML = insights.map(i =>
+            `<div class="insight ${i.type}">💡 ${i.message}</div>`
+        ).join("") || "<p style='color:#aaa;font-size:12px;'>No insights yet. Add more transactions.</p>";
+    }
+
+    async function loadTransactions() {
+        const [incRes, expRes] = await Promise.all([
+            fetch(`${API}/income/${USER_ID}`),
+            fetch(`${API}/expenses/${USER_ID}`)
+        ]);
+        const income = await incRes.json();
+        const expenses = await expRes.json();
+
+        const all = [
+            ...income.map(i => ({ date: i.income_date, type: "income", cat: i.source, desc: "-", amount: i.amount })),
+            ...expenses.map(e => ({ date: e.expense_date, type: "expense", cat: e.category, desc: e.description, amount: e.amount }))
+        ].sort((a, b) => new Date(b.date) - new Date(a.date));
+
+        document.getElementById("transactions-body").innerHTML = all.map(t => `
+            <tr>
+                <td>${new Date(t.date).toLocaleDateString()}</td>
+                <td><span class="badge ${t.type}">${t.type}</span></td>
+                <td>${t.cat}</td>
+                <td>${t.desc}</td>
+                <td style="font-weight:600; color:${t.type === 'income' ? '#00b894' : '#e17055'}">
+                    ${t.type === 'income' ? '+' : '-'} KES ${parseFloat(t.amount).toLocaleString()}
+                </td>
+            </tr>`).join("");
+    }
+
+    async function addIncome() {
+        const body = {
+            user_id: USER_ID,
+            source: document.getElementById("income-source").value,
+            amount: document.getElementById("income-amount").value,
+            income_date: document.getElementById("income-date").value
+        };
+        await fetch(`${API}/income`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        alert("Income added!");
+        location.reload();
+    }
+
+    async function addExpense() {
+        const body = {
+            user_id: USER_ID,
+            category: document.getElementById("expense-category").value,
+            amount: document.getElementById("expense-amount").value,
+            expense_date: document.getElementById("expense-date").value,
+            description: document.getElementById("expense-desc").value
+        };
+        await fetch(`${API}/expenses`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        alert("Expense added!");
+        location.reload();
+    }
+
+    async function addBudget() {
+        const body = {
+            user_id: USER_ID,
+            category: document.getElementById("budget-category").value,
+            budget_amount: document.getElementById("budget-amount").value,
+            month_year: MONTH
+        };
+        await fetch(`${API}/budgets`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        alert("Budget set!");
+        location.reload();
+    }
+
+    // Load everything on page open
+    loadDashboard();
+    loadInsights();
+    loadTransactions();
+</script>
+
+</body>
+</html>
