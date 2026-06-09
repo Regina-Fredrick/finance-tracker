@@ -1,5 +1,7 @@
+import os
 import mysql.connector
 from flask import Flask, request, jsonify, send_from_directory
+from flask_cors import CORS
 from AI import generate_insights
 
 def get_connection():
@@ -11,6 +13,7 @@ def get_connection():
     )
 
 app = Flask(__name__)
+CORS(app, resources={r"/*": {"origins": "*"}})
 
 @app.route("/")
 def index():
@@ -19,6 +22,10 @@ def index():
 @app.route("/app")
 def frontend():
     return send_from_directory(".", "index.html")
+
+@app.route("/logout")
+def logout():
+    return '''<script>localStorage.removeItem("user_id");localStorage.removeItem("user_name");window.location.href="/";</script>'''
 
 @app.route("/test-db")
 def test_db():
@@ -204,4 +211,5 @@ def get_insights(user_id):
     return jsonify(insights)
 
 if __name__ == "__main__":
-    app.run(debug=True)
+    port = int(os.environ.get("PORT", 5000))
+    app.run(host="0.0.0.0", port=port, debug=False)

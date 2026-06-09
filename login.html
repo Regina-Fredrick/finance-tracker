@@ -3,188 +3,126 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinTrack - Login</title>
+    <title>Finance_Tracker — Login</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --surface2: #1e2029;
+            --border: rgba(0,0,0,0.1);
+            --text: #000000;
+            --muted: #7a7a8c;
+            --green: #1a73e8;
+            --green-dim: rgba(26,115,232,0.08);
+            --red: #ff5e6c;
+        }
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
-        body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f0f2f5;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-        }
-
-        .auth-container {
-            background: white;
-            border-radius: 16px;
-            padding: 40px;
-            width: 100%;
-            max-width: 420px;
-            box-shadow: 0 4px 24px rgba(0,0,0,0.08);
-        }
-
-        .logo {
-            text-align: center;
-            margin-bottom: 32px;
-        }
-
-        .logo h1 {
-            font-size: 28px;
-            color: #1a1a2e;
-        }
-
-        .logo h1 span { color: #00d4aa; }
-
-        .logo p {
-            font-size: 14px;
-            color: #888;
-            margin-top: 6px;
-        }
-
-        .tabs {
-            display: flex;
-            background: #f0f2f5;
-            border-radius: 10px;
-            padding: 4px;
-            margin-bottom: 28px;
-        }
-
-        .tab {
-            flex: 1;
-            text-align: center;
-            padding: 10px;
-            border-radius: 8px;
-            font-size: 14px;
-            cursor: pointer;
-            color: #888;
-            transition: all 0.2s;
-        }
-
-        .tab.active {
-            background: white;
-            color: #1a1a2e;
-            font-weight: 600;
-        }
-
+        body { font-family: 'DM Sans', sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+        .auth-box { width: 100%; max-width: 380px; padding: 48px 24px; }
+        .auth-brand { text-align: center; margin-bottom: 32px; }
+        .auth-brand h1 { font-family: 'DM Serif Display', serif; font-size: 28px; letter-spacing: -0.5px; }
+        .auth-brand h1 span { color: var(--green); }
+        .auth-brand p { font-size: 13px; color: var(--muted); margin-top: 6px; }
+        .auth-header { margin-bottom: 24px; }
+        .auth-header h2 { font-family: 'DM Serif Display', serif; font-size: 24px; font-weight: 400; letter-spacing: -0.5px; margin-bottom: 6px; }
+        .auth-header p { font-size: 13px; color: var(--muted); }
+        .tabs { display: flex; background: #f1f3f4; border: 1px solid var(--border); border-radius: 12px; padding: 4px; margin-bottom: 28px; }
+        .tab { flex: 1; text-align: center; padding: 9px; border-radius: 9px; font-size: 13px; font-weight: 500; cursor: pointer; color: var(--muted); transition: all 0.2s; }
+        .tab.active { background: #ffffff; color: var(--text); box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
         .form-group { margin-bottom: 16px; }
-
-        .form-group label {
-            display: block;
-            font-size: 13px;
-            color: #555;
-            margin-bottom: 6px;
-            font-weight: 500;
-        }
-
-        .form-group input {
-            width: 100%;
-            padding: 12px 14px;
-            border: 1.5px solid #e0e0e0;
-            border-radius: 10px;
-            font-size: 14px;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .form-group input:focus { border-color: #00d4aa; }
-
-        .btn {
-            width: 100%;
-            padding: 13px;
-            background: #1a1a2e;
-            color: white;
-            border: none;
-            border-radius: 10px;
-            font-size: 15px;
-            font-weight: 600;
-            cursor: pointer;
-            margin-top: 8px;
-            transition: background 0.2s;
-        }
-
-        .btn:hover { background: #00d4aa; color: #1a1a2e; }
-
-        .error {
-            background: #fde8e8;
-            color: #e17055;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 16px;
-            display: none;
-        }
-
-        .success {
-            background: #e8f8f0;
-            color: #00b894;
-            padding: 10px 14px;
-            border-radius: 8px;
-            font-size: 13px;
-            margin-bottom: 16px;
-            display: none;
-        }
-
+        .form-group label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 7px; }
+        .input-wrap { position: relative; }
+        .input-wrap span { position: absolute; left: 14px; top: 50%; transform: translateY(-50%); font-size: 15px; color: var(--muted); }
+        input { width: 100%; padding: 12px 14px 12px 40px; background: #f1f3f4; border: 1px solid var(--border); border-radius: 10px; font-size: 13px; color: var(--text); font-family: 'DM Sans', sans-serif; outline: none; transition: border-color 0.2s; }
+        input:focus { border-color: var(--green); background: #ffffff; }
+        input::placeholder { color: var(--muted); }
+        .btn { width: 100%; padding: 13px; background: var(--green); color: #ffffff; border: none; border-radius: 10px; font-size: 14px; font-weight: 500; cursor: pointer; font-family: 'DM Sans', sans-serif; transition: opacity 0.2s; margin-top: 8px; }
+        .btn:hover { opacity: 0.9; }
+        .error-msg { background: rgba(255,94,108,0.08); border: 1px solid rgba(255,94,108,0.2); color: #d93025; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
+        .success-msg { background: var(--green-dim); border: 1px solid rgba(26,115,232,0.2); color: #1a73e8; padding: 10px 14px; border-radius: 8px; font-size: 13px; margin-bottom: 16px; display: none; }
         #register-form { display: none; }
+        @media (max-width: 768px) { .auth-box { padding: 32px 24px; } }
     </style>
 </head>
 <body>
 
-<div class="auth-container">
-    <div class="logo">
-        <h1>💰 Fin<span>Track</span></h1>
+<div class="auth-box">
+    <div class="auth-brand">
+        <h1>Finance_<span>Tracker</span></h1>
         <p>Your personal finance manager</p>
     </div>
-
+    <div class="auth-header">
+        <h2 id="auth-title">Welcome back</h2>
+        <p id="auth-sub">Sign in to your Finance_Tracker account</p>
+    </div>
     <div class="tabs">
-        <div class="tab active" onclick="showTab('login')">Login</div>
-        <div class="tab" onclick="showTab('register')">Register</div>
+        <div class="tab active" onclick="showTab('login')">Sign in</div>
+        <div class="tab" onclick="showTab('register')">Create account</div>
     </div>
 
-    <!-- Login Form -->
     <div id="login-form">
-        <div class="error" id="login-error"></div>
+        <div class="error-msg" id="login-error"></div>
         <div class="form-group">
             <label>Email address</label>
-            <input type="email" id="login-email" placeholder="you@email.com">
+            <div class="input-wrap">
+                <span>✉</span>
+                <input type="email" id="login-email" placeholder="you@email.com">
+            </div>
         </div>
         <div class="form-group">
             <label>Password</label>
-            <input type="password" id="login-password" placeholder="Your password">
+            <div class="input-wrap">
+                <span>🔒</span>
+                <input type="password" id="login-password" placeholder="Your password">
+            </div>
         </div>
-        <button class="btn" onclick="login()">Login</button>
+        <button class="btn" onclick="login()">Sign in</button>
     </div>
 
-    <!-- Register Form -->
     <div id="register-form">
-        <div class="error" id="register-error"></div>
-        <div class="success" id="register-success"></div>
+        <div class="error-msg" id="register-error"></div>
+        <div class="success-msg" id="register-success"></div>
         <div class="form-group">
             <label>Full name</label>
-            <input type="text" id="reg-name" placeholder="Regina Fredrick">
+            <div class="input-wrap">
+                <span>👤</span>
+                <input type="text" id="reg-name" placeholder="Your name">
+            </div>
         </div>
         <div class="form-group">
             <label>Email address</label>
-            <input type="email" id="reg-email" placeholder="you@email.com">
+            <div class="input-wrap">
+                <span>✉</span>
+                <input type="email" id="reg-email" placeholder="you@email.com">
+            </div>
         </div>
         <div class="form-group">
             <label>Password</label>
-            <input type="password" id="reg-password" placeholder="Create a password">
+            <div class="input-wrap">
+                <span>🔒</span>
+                <input type="password" id="reg-password" placeholder="Create a password">
+            </div>
         </div>
-        <button class="btn" onclick="register()">Create Account</button>
+        <button class="btn" onclick="register()">Create account</button>
     </div>
 </div>
 
 <script>
-    const API = "http://127.0.0.1:5000";
-
     function showTab(tab) {
         document.getElementById("login-form").style.display = tab === "login" ? "block" : "none";
         document.getElementById("register-form").style.display = tab === "register" ? "block" : "none";
         document.querySelectorAll(".tab").forEach((t, i) => {
             t.classList.toggle("active", (tab === "login" && i === 0) || (tab === "register" && i === 1));
         });
+        document.getElementById("auth-title").textContent = tab === "login" ? "Welcome back" : "Create account";
+        document.getElementById("auth-sub").textContent = tab === "login" ? "Sign in to your Finance_Tracker account" : "Start tracking your finances today";
+    }
+
+    function showError(id, message) {
+        const el = document.getElementById(id);
+        el.style.display = "block";
+        el.textContent = message;
     }
 
     async function login() {
@@ -196,20 +134,26 @@
             return;
         }
 
-        const res = await fetch(`${API}/users/login`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ email, password })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            localStorage.setItem("user_id", data.user_id);
-            localStorage.setItem("user_name", data.name);
-            window.location.href = "/app";
-        } else {
-            showError("login-error", data.error);
+        try {
+            const xhr = new XMLHttpRequest();
+            xhr.open("POST", "http://127.0.0.1:5000/users/login", true);
+            xhr.setRequestHeader("Content-Type", "application/json");
+            xhr.onload = function() {
+                const data = JSON.parse(xhr.responseText);
+                if (xhr.status === 200) {
+                    localStorage.setItem("user_id", data.user_id);
+                    localStorage.setItem("user_name", data.name);
+                    window.location.href = "/app";
+                } else {
+                    showError("login-error", data.error || "Login failed");
+                }
+            };
+            xhr.onerror = function() {
+                showError("login-error", "Connection failed. Is Flask running?");
+            };
+            xhr.send(JSON.stringify({ email: email, password: password }));
+        } catch (err) {
+            showError("login-error", "Error: " + err.message);
         }
     }
 
@@ -223,34 +167,27 @@
             return;
         }
 
-        const res = await fetch(`${API}/users/register`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ full_name, email, password })
-        });
-
-        const data = await res.json();
-
-        if (res.ok) {
-            document.getElementById("register-success").style.display = "block";
-            document.getElementById("register-success").textContent = "Account created! You can now login.";
-            setTimeout(() => showTab("login"), 2000);
-        } else {
-            showError("register-error", data.error);
-        }
+        const xhr = new XMLHttpRequest();
+        xhr.open("POST", "http://127.0.0.1:5000/users/register", true);
+        xhr.setRequestHeader("Content-Type", "application/json");
+        xhr.onload = function() {
+            const data = JSON.parse(xhr.responseText);
+            if (xhr.status === 201) {
+                const s = document.getElementById("register-success");
+                s.style.display = "block";
+                s.textContent = "Account created! You can now sign in.";
+                setTimeout(() => showTab("login"), 2000);
+            } else {
+                showError("register-error", data.error || "Registration failed");
+            }
+        };
+        xhr.onerror = function() {
+            showError("register-error", "Connection failed. Is Flask running?");
+        };
+        xhr.send(JSON.stringify({ full_name: full_name, email: email, password: password }));
     }
 
-    function showError(id, message) {
-        const el = document.getElementById(id);
-        el.style.display = "block";
-        el.textContent = message;
-    }
-
-    // Redirect to dashboard if already logged in
-    if (localStorage.getItem("user_id")) {
-        window.location.href = "/app";
-    }
+    if (localStorage.getItem("user_id")) { window.location.href = "/app"; }
 </script>
-
 </body>
 </html>

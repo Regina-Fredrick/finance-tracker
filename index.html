@@ -3,32 +3,144 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Finance Tracker</title>
+    <title>Finance_Tracker</title>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
+        :root {
+            --bg: #ffffff;
+            --surface: #ffffff;
+            --surface2: #f1f3f4;
+            --border: rgba(0,0,0,0.1);
+            --text: #000000;
+            --muted: #5f6368;
+            --green: #1a73e8;
+            --green-dim: rgba(26,115,232,0.1);
+            --red: #d93025;
+            --red-dim: rgba(217,48,37,0.1);
+            --gold: #f29900;
+            --gold-dim: rgba(242,153,0,0.1);
+            --blue: #1a73e8;
+            --blue-dim: rgba(26,115,232,0.1);
+        }
+
         * { margin: 0; padding: 0; box-sizing: border-box; }
 
         body {
-            font-family: 'Segoe UI', sans-serif;
-            background: #f0f2f5;
-            color: #333;
+            font-family: 'DM Sans', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
         }
 
-        nav {
-            background: #1a1a2e;
-            color: white;
-            padding: 16px 24px;
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0; top: 0; bottom: 0;
+            width: 220px;
+            background: var(--surface);
+            border-right: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            padding: 28px 0;
+            z-index: 100;
+        }
+
+        .logo {
+            padding: 0 24px 32px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 24px;
+        }
+
+        .logo h1 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 22px;
+            color: var(--text);
+            letter-spacing: -0.5px;
+        }
+
+        .logo span { color: var(--green); }
+
+        .logo p {
+            font-size: 11px;
+            color: var(--muted);
+            margin-top: 3px;
+            font-weight: 300;
+        }
+
+        .nav-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 11px 24px;
+            font-size: 13px;
+            color: var(--muted);
+            cursor: pointer;
+            transition: all 0.2s;
+            border-left: 2px solid transparent;
+        }
+
+        .nav-item:hover { color: var(--text); background: rgba(255,255,255,0.03); }
+        .nav-item.active { color: var(--green); border-left-color: var(--green); background: var(--green-dim); }
+
+        .nav-icon { font-size: 16px; width: 20px; text-align: center; }
+
+        .sidebar-bottom {
+            margin-top: auto;
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+        }
+
+        .user-pill {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .avatar {
+            width: 32px; height: 32px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, var(--green), var(--blue));
+            display: flex; align-items: center; justify-content: center;
+            font-size: 12px; font-weight: 500; color: #0e0f14;
+        }
+
+        .user-info p { font-size: 13px; font-weight: 500; }
+        .user-info span { font-size: 11px; color: var(--muted); }
+
+        /* Main */
+        .main {
+            margin-left: 220px;
+            padding: 32px;
+            min-height: 100vh;
+        }
+
+        .topbar {
             display: flex;
             justify-content: space-between;
             align-items: center;
+            margin-bottom: 32px;
         }
 
-        nav h1 { font-size: 20px; color: #00d4aa; }
+        .topbar h2 {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            font-weight: 400;
+            letter-spacing: -0.5px;
+        }
 
-        nav span { font-size: 14px; color: #aaa; }
+        .topbar h2 span { color: var(--muted); font-size: 18px; }
 
-        .container { max-width: 1100px; margin: 24px auto; padding: 0 16px; }
+        .month-badge {
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 7px 16px;
+            font-size: 13px;
+            color: var(--muted);
+        }
 
+        /* Metric cards */
         .metrics {
             display: grid;
             grid-template-columns: repeat(4, 1fr);
@@ -36,215 +148,316 @@
             margin-bottom: 24px;
         }
 
-        .metric-card {
-            background: white;
-            border-radius: 12px;
+        .metric {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
             padding: 20px;
-            text-align: center;
+            position: relative;
+            overflow: hidden;
+            transition: transform 0.2s, border-color 0.2s;
         }
 
-        .metric-card .label {
-            font-size: 12px;
-            color: #888;
-            margin-bottom: 8px;
-            text-transform: uppercase;
+        .metric:hover { transform: translateY(-2px); border-color: rgba(255,255,255,0.12); }
+
+        .metric::before {
+            content: '';
+            position: absolute;
+            top: 0; right: 0;
+            width: 80px; height: 80px;
+            border-radius: 50%;
+            opacity: 0.06;
+            transform: translate(20px, -20px);
         }
 
-        .metric-card .value {
-            font-size: 24px;
-            font-weight: 600;
-            color: #1a1a2e;
+        .metric.green::before { background: var(--green); }
+        .metric.red::before { background: var(--red); }
+        .metric.gold::before { background: var(--gold); }
+        .metric.blue::before { background: var(--blue); }
+
+        .metric-icon {
+            width: 36px; height: 36px;
+            border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 16px;
+            margin-bottom: 14px;
         }
 
-        .metric-card .value.green { color: #00b894; }
-        .metric-card .value.red { color: #e17055; }
+        .metric.green .metric-icon { background: var(--green-dim); }
+        .metric.red .metric-icon { background: var(--red-dim); }
+        .metric.gold .metric-icon { background: var(--gold-dim); }
+        .metric.blue .metric-icon { background: var(--blue-dim); }
 
-        .grid2 {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
+        .metric-label { font-size: 11px; color: var(--muted); text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 6px; }
+
+        .metric-value {
+            font-family: 'DM Serif Display', serif;
+            font-size: 26px;
+            letter-spacing: -0.5px;
         }
 
+        .metric.green .metric-value { color: var(--green); }
+        .metric.red .metric-value { color: var(--red); }
+        .metric.gold .metric-value { color: var(--gold); }
+        .metric.blue .metric-value { color: var(--blue); }
+
+        .metric-sub { font-size: 11px; color: var(--muted); margin-top: 4px; }
+
+        /* Grid layouts */
+        .grid2 { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+        .grid3 { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 16px; margin-bottom: 16px; }
+
+        /* Cards */
         .card {
-            background: white;
-            border-radius: 12px;
-            padding: 20px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 22px;
         }
 
-        .card h3 {
-            font-size: 14px;
-            color: #888;
+        .card-title {
+            font-size: 11px;
             text-transform: uppercase;
-            margin-bottom: 16px;
+            letter-spacing: 0.08em;
+            color: var(--muted);
+            margin-bottom: 18px;
         }
 
+        /* Insights */
         .insight {
             display: flex;
             gap: 12px;
             padding: 12px;
-            border-radius: 8px;
-            margin-bottom: 10px;
-            font-size: 14px;
-        }
-
-        .insight.positive { background: #e8f8f0; color: #00b894; }
-        .insight.advice { background: #fff3e0; color: #e67e22; }
-        .insight.warning { background: #fff3e0; color: #e67e22; }
-        .insight.danger { background: #fde8e8; color: #e17055; }
-        .insight.prediction { background: #e8f0fe; color: #3b5bdb; }
-        .insight.alert { background: #fde8e8; color: #e17055; }
-
-        .budget-row { margin-bottom: 14px; }
-
-        .budget-row .budget-header {
-            display: flex;
-            justify-content: space-between;
+            border-radius: 10px;
+            margin-bottom: 8px;
             font-size: 13px;
-            margin-bottom: 6px;
+            line-height: 1.5;
+            border: 1px solid transparent;
         }
 
-        .budget-bar-bg {
-            height: 8px;
-            background: #f0f2f5;
-            border-radius: 4px;
-            overflow: hidden;
-        }
+        .insight:last-child { margin-bottom: 0; }
+        .insight-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 5px; }
+        .insight.positive { background: var(--green-dim); border-color: rgba(61,255,160,0.15); color: #a8ffd4; }
+        .insight.positive .insight-dot { background: var(--green); }
+        .insight.advice, .insight.warning { background: var(--gold-dim); border-color: rgba(245,200,66,0.15); color: #fce9a0; }
+        .insight.advice .insight-dot, .insight.warning .insight-dot { background: var(--gold); }
+        .insight.danger, .insight.alert { background: var(--red-dim); border-color: rgba(255,94,108,0.15); color: #ffb3b9; }
+        .insight.danger .insight-dot, .insight.alert .insight-dot { background: var(--red); }
+        .insight.prediction { background: var(--blue-dim); border-color: rgba(91,156,246,0.15); color: #b3d0ff; }
+        .insight.prediction .insight-dot { background: var(--blue); }
 
-        .budget-bar {
-            height: 8px;
-            border-radius: 4px;
-        }
+        /* Budget bars */
+        .budget-row { margin-bottom: 16px; }
+        .budget-row:last-child { margin-bottom: 0; }
+        .budget-header { display: flex; justify-content: space-between; font-size: 13px; margin-bottom: 8px; }
+        .budget-cat { font-weight: 500; }
+        .budget-amt { color: var(--muted); font-size: 12px; }
+        .budget-bar-bg { height: 5px; background: rgba(255,255,255,0.06); border-radius: 3px; overflow: hidden; }
+        .budget-bar { height: 5px; border-radius: 3px; transition: width 0.8s ease; }
 
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 14px;
-        }
-
-        th {
-            text-align: left;
-            padding: 10px;
-            background: #f8f9fa;
-            color: #888;
-            font-size: 12px;
-            text-transform: uppercase;
-        }
-
-        td { padding: 10px; border-bottom: 1px solid #f0f2f5; }
+        /* Transactions */
+        table { width: 100%; border-collapse: collapse; font-size: 13px; }
+        th { text-align: left; padding: 0 12px 12px; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); font-weight: 400; }
+        td { padding: 12px; border-bottom: 1px solid var(--border); }
+        tr:last-child td { border-bottom: none; }
+        tr:hover td { background: rgba(255,255,255,0.02); }
 
         .badge {
             font-size: 11px;
-            padding: 3px 8px;
-            border-radius: 10px;
-            font-weight: 600;
+            padding: 3px 10px;
+            border-radius: 20px;
+            font-weight: 500;
         }
 
-        .badge.income { background: #e8f8f0; color: #00b894; }
-        .badge.expense { background: #fde8e8; color: #e17055; }
+        .badge.income { background: var(--green-dim); color: var(--green); }
+        .badge.expense { background: var(--red-dim); color: var(--red); }
 
-        .form-row {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
+        /* Forms */
+        .form-group { margin-bottom: 14px; }
+        .form-group label { display: block; font-size: 11px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--muted); margin-bottom: 7px; }
 
         input, select {
             width: 100%;
-            padding: 10px 12px;
-            border: 1px solid #ddd;
-            border-radius: 8px;
-            font-size: 14px;
+            padding: 10px 14px;
+            background: var(--surface2);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            font-size: 13px;
+            color: var(--text);
+            font-family: 'DM Sans', sans-serif;
             outline: none;
+            transition: border-color 0.2s;
         }
 
-        input:focus, select:focus { border-color: #00d4aa; }
+        input:focus, select:focus { border-color: rgba(255,255,255,0.2); }
+        select option { background: var(--surface2); }
 
-        button {
-            background: #1a1a2e;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 8px;
-            cursor: pointer;
-            font-size: 14px;
+        .btn {
             width: 100%;
-            margin-top: 8px;
+            padding: 11px;
+            background: var(--green);
+            color: #0e0f14;
+            border: none;
+            border-radius: 10px;
+            font-size: 13px;
+            font-weight: 500;
+            cursor: pointer;
+            font-family: 'DM Sans', sans-serif;
+            transition: opacity 0.2s, transform 0.1s;
+            margin-top: 4px;
         }
 
-        button:hover { background: #00d4aa; color: #1a1a2e; }
+        .btn:hover { opacity: 0.9; }
+        .btn:active { transform: scale(0.98); }
+        .btn.secondary { background: var(--surface2); color: var(--text); border: 1px solid var(--border); }
+        .btn.secondary:hover { border-color: rgba(255,255,255,0.15); }
 
-        .grid3 {
-            display: grid;
-            grid-template-columns: 1fr 1fr 1fr;
-            gap: 16px;
-            margin-bottom: 24px;
+        /* Animations */
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(12px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .metric { animation: fadeUp 0.4s ease both; }
+        .metric:nth-child(1) { animation-delay: 0.05s; }
+        .metric:nth-child(2) { animation-delay: 0.1s; }
+        .metric:nth-child(3) { animation-delay: 0.15s; }
+        .metric:nth-child(4) { animation-delay: 0.2s; }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-track { background: transparent; }
+        ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.1); border-radius: 3px; }
+
+        /* Section divider */
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--muted);
+            margin: 24px 0 14px;
         }
     </style>
 </head>
 <body>
 
-<nav>
-    <h1>💰 Finance_Tracker</h1>
-    <span id="welcome-msg">Welcome, Regina</span>
-</nav>
-
-<div class="container">
-
-    <!-- Metrics -->
-    <div class="metrics">
-        <div class="metric-card">
-            <div class="label">Total Income</div>
-            <div class="value green" id="total-income">KES 0</div>
-        </div>
-        <div class="metric-card">
-            <div class="label">Total Expenses</div>
-            <div class="value red" id="total-expenses">KES 0</div>
-        </div>
-        <div class="metric-card">
-            <div class="label">Savings</div>
-            <div class="value green" id="savings">KES 0</div>
-        </div>
-        <div class="metric-card">
-            <div class="label">Savings Rate</div>
-            <div class="value" id="savings-rate">0%</div>
+<!-- Sidebar -->
+<div class="sidebar">
+    <div class="logo">
+        <h1>Finance_<span>Tracker</span></h1>
+        <p>Personal Finance</p>
+    </div>
+    <div class="nav-item active"><span class="nav-icon">◈</span> Dashboard</div>
+    <div class="nav-item"><span class="nav-icon">↕</span> Transactions</div>
+    <div class="nav-item"><span class="nav-icon">◎</span> Budgets</div>
+    <div class="nav-item"><span class="nav-icon">⟁</span> Analytics</div>
+    <div class="nav-item"><span class="nav-icon">✦</span> Insights</div>
+    <div class="sidebar-bottom">
+        <div class="user-pill">
+            <div class="avatar" id="avatar-initials">RF</div>
+            <div class="user-info">
+                <p id="sidebar-name">Regina</p>
+               <span>Free plan</span>
+                </div>
+            </div>
+            <div class="nav-item" onclick="logout()" style="margin-top:10px; color:var(--red);">
+                <span class="nav-icon">⏻</span> Sign out
+            </div>
         </div>
     </div>
 
-    <!-- Charts -->
+
+<!-- Main content -->
+<div class="main">
+    <div class="topbar">
+        <h2>Overview <span id="greeting-sub"></span></h2>
+        <div class="month-badge">📅 June 2025</div>
+    </div>
+
+    <!-- Metrics -->
+    <div class="metrics">
+        <div class="metric green">
+            <div class="metric-icon">↓</div>
+            <div class="metric-label">Total Income</div>
+            <div class="metric-value" id="total-income">—</div>
+            <div class="metric-sub">This month</div>
+        </div>
+        <div class="metric red">
+            <div class="metric-icon">↑</div>
+            <div class="metric-label">Total Expenses</div>
+            <div class="metric-value" id="total-expenses">—</div>
+            <div class="metric-sub">This month</div>
+        </div>
+        <div class="metric gold">
+            <div class="metric-icon">◈</div>
+            <div class="metric-label">Net Savings</div>
+            <div class="metric-value" id="savings">—</div>
+            <div class="metric-sub" id="savings-rate-sub">—</div>
+        </div>
+        <div class="metric blue">
+            <div class="metric-icon">◎</div>
+            <div class="metric-label">Savings Rate</div>
+            <div class="metric-value" id="savings-rate">—</div>
+            <div class="metric-sub">of income saved</div>
+        </div>
+    </div>
+
+    <!-- Charts + Budget -->
     <div class="grid2">
         <div class="card">
-            <h3>Expenses by Category</h3>
-            <canvas id="pieChart" height="220"></canvas>
+            <div class="card-title">Expenses by category</div>
+            <canvas id="pieChart" height="200"></canvas>
         </div>
         <div class="card">
-            <h3>Budget Status</h3>
-            <div id="budget-status"></div>
+            <div class="card-title">Budget status</div>
+            <div id="budget-status"><p style="color:var(--muted);font-size:13px;">No budgets set yet.</p></div>
         </div>
     </div>
 
     <!-- AI Insights -->
-    <div class="card" style="margin-bottom: 24px;">
-        <h3>AI Insights</h3>
-        <div id="insights-container"></div>
+    <div class="card" style="margin-bottom:16px;">
+        <div class="card-title">✦ AI insights</div>
+        <div id="insights-container"><p style="color:var(--muted);font-size:13px;">Loading insights...</p></div>
     </div>
 
-    <!-- Forms + Transactions -->
+    <!-- Forms -->
+     <div class="card" style="margin-bottom:16px; padding:28px;">
+    <div style="display:flex; gap:32px; flex-wrap:wrap;">
+        <div>
+            <h2 style="font-family:'DM Serif Display',serif; font-size:22px; margin-bottom:6px;">Finance_Tracker</h2>
+            <p style="color:var(--muted); font-size:13px;">Your personal finance manager</p>
+        </div>
+        <div style="display:flex; gap:24px; flex-wrap:wrap; margin-top:8px;">
+            <div style="display:flex; gap:10px; align-items:center;"><span style="font-size:20px;">📊</span><div><strong style="font-size:13px;">Smart Dashboard</strong><p style="font-size:12px; color:var(--muted);">See your income, expenses, and savings at a glance.</p></div></div>
+            <div style="display:flex; gap:10px; align-items:center;"><span style="font-size:20px;">✦</span><div><strong style="font-size:13px;">AI-Powered Insights</strong><p style="font-size:12px; color:var(--muted);">Get personalized recommendations based on your spending.</p></div></div>
+            <div style="display:flex; gap:10px; align-items:center;"><span style="font-size:20px;">◎</span><div><strong style="font-size:13px;">Budget Tracking</strong><p style="font-size:12px; color:var(--muted);">Set monthly limits and get alerts before you overspend.</p></div></div>
+            <div style="display:flex; gap:10px; align-items:center;"><span style="font-size:20px;">⟁</span><div><strong style="font-size:13px;">Spending Predictions</strong><p style="font-size:12px; color:var(--muted);">Know what you will spend next month in advance.</p></div></div>
+        </div>
+    </div>
+</div>
+    <div class="section-label">Add new record</div>
     <div class="grid3">
         <div class="card">
-            <h3>Add Income</h3>
-            <div class="form-row">
-                <input type="text" id="income-source" placeholder="Source (e.g. Salary)">
-                <input type="number" id="income-amount" placeholder="Amount (KES)">
+            <div class="card-title">Income</div>
+            <div class="form-group">
+                <label>Source</label>
+                <input type="text" id="income-source" placeholder="e.g. Salary">
             </div>
-            <input type="date" id="income-date" style="margin-bottom:12px;">
-            <button onclick="addIncome()">Add Income</button>
+            <div class="form-group">
+                <label>Amount (KES)</label>
+                <input type="number" id="income-amount" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Date</label>
+                <input type="date" id="income-date">
+            </div>
+            <button class="btn" onclick="addIncome()">Add Income</button>
         </div>
 
         <div class="card">
-            <h3>Add Expense</h3>
-            <div class="form-row">
+            <div class="card-title">Expense</div>
+            <div class="form-group">
+                <label>Category</label>
                 <select id="expense-category">
                     <option>Food</option>
                     <option>Transport</option>
@@ -253,33 +466,46 @@
                     <option>Shopping</option>
                     <option>Utilities</option>
                 </select>
-                <input type="number" id="expense-amount" placeholder="Amount (KES)">
             </div>
-            <div class="form-row">
+            <div class="form-group">
+                <label>Amount (KES)</label>
+                <input type="number" id="expense-amount" placeholder="0.00">
+            </div>
+            <div class="form-group">
+                <label>Date</label>
                 <input type="date" id="expense-date">
-                <input type="text" id="expense-desc" placeholder="Description">
             </div>
-            <button onclick="addExpense()">Add Expense</button>
+            <div class="form-group">
+                <label>Description</label>
+                <input type="text" id="expense-desc" placeholder="Optional note">
+            </div>
+            <button class="btn" onclick="addExpense()">Add Expense</button>
         </div>
 
         <div class="card">
-            <h3>Set Budget</h3>
-            <select id="budget-category" style="margin-bottom:12px;">
-                <option>Food</option>
-                <option>Transport</option>
-                <option>Rent</option>
-                <option>Entertainment</option>
-                <option>Shopping</option>
-                <option>Utilities</option>
-            </select>
-            <input type="number" id="budget-amount" placeholder="Budget Amount (KES)" style="margin-bottom:12px;">
-            <button onclick="addBudget()">Set Budget</button>
+            <div class="card-title">Budget</div>
+            <div class="form-group">
+                <label>Category</label>
+                <select id="budget-category">
+                    <option>Food</option>
+                    <option>Transport</option>
+                    <option>Rent</option>
+                    <option>Entertainment</option>
+                    <option>Shopping</option>
+                    <option>Utilities</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <label>Monthly limit (KES)</label>
+                <input type="number" id="budget-amount" placeholder="0.00">
+            </div>
+            <button class="btn secondary" onclick="addBudget()" style="margin-top:82px;">Set Budget</button>
         </div>
     </div>
 
-    <!-- Transactions Table -->
+    <!-- Transactions -->
+    <div class="section-label">Recent transactions</div>
     <div class="card">
-        <h3>Recent Transactions</h3>
         <table>
             <thead>
                 <tr>
@@ -287,64 +513,114 @@
                     <th>Type</th>
                     <th>Category / Source</th>
                     <th>Description</th>
-                    <th>Amount</th>
+                    <th style="text-align:right;">Amount</th>
                 </tr>
             </thead>
-            <tbody id="transactions-body"></tbody>
+            <tbody id="transactions-body">
+                <tr><td colspan="5" style="color:var(--muted);text-align:center;padding:24px;">Loading...</td></tr>
+            </tbody>
         </table>
     </div>
-
 </div>
 
 <script>
-    const USER_ID = 1;
+    const USER_ID = parseInt(localStorage.getItem("user_id")) || 1;
+    const USER_NAME = localStorage.getItem("user_name") || "User";
     const MONTH = "2025-06";
     const API = "http://127.0.0.1:5000";
 
+    // Set user info
+    document.getElementById("sidebar-name").textContent = USER_NAME.split(" ")[0];
+    document.getElementById("avatar-initials").textContent = USER_NAME.split(" ").map(n => n[0]).join("").substring(0,2).toUpperCase();
+
+    // Greeting
+    const hour = new Date().getHours();
+    const greet = hour < 12 ? "Good morning" : hour < 17 ? "Good afternoon" : "Good evening";
+    document.getElementById("greeting-sub").textContent = `— ${greet}, ${USER_NAME.split(" ")[0]}`;
+
+    let pieChartInstance = null;
+function logout() {
+    localStorage.removeItem("user_id");
+    localStorage.removeItem("user_name");
+    window.location.href = "/";
+}
     async function loadDashboard() {
         const res = await fetch(`${API}/dashboard/${USER_ID}?month=${MONTH}`);
         const data = await res.json();
 
-        document.getElementById("total-income").textContent = `KES ${data.total_income.toLocaleString()}`;
-        document.getElementById("total-expenses").textContent = `KES ${data.total_expenses.toLocaleString()}`;
-        document.getElementById("savings").textContent = `KES ${data.savings.toLocaleString()}`;
+        document.getElementById("total-income").textContent = `${(data.total_income/1000).toFixed(0)}K`;
+        document.getElementById("total-expenses").textContent = `${(data.total_expenses/1000).toFixed(0)}K`;
+        document.getElementById("savings").textContent = `${(data.savings/1000).toFixed(0)}K`;
         document.getElementById("savings-rate").textContent = `${data.savings_rate}%`;
+        document.getElementById("savings-rate-sub").textContent = `KES ${data.savings.toLocaleString()}`;
 
         // Pie chart
         const labels = data.expenses_by_category.map(e => e.category);
         const values = data.expenses_by_category.map(e => e.spent);
-        new Chart(document.getElementById("pieChart"), {
+        const colors = ["#3dffa0","#5b9cf6","#ff5e6c","#f5c842","#a78bfa","#fb923c"];
+
+        if (pieChartInstance) pieChartInstance.destroy();
+        pieChartInstance = new Chart(document.getElementById("pieChart"), {
             type: "doughnut",
             data: {
                 labels,
-                datasets: [{ data: values, backgroundColor: ["#00b894","#0984e3","#e17055","#6c5ce7","#fdcb6e","#fd79a8"] }]
+                datasets: [{
+                    data: values,
+                    backgroundColor: colors,
+                    borderWidth: 0,
+                    hoverOffset: 6
+                }]
             },
-            options: { responsive: true, plugins: { legend: { position: "bottom" } } }
+            options: {
+                responsive: true,
+                cutout: "68%",
+                plugins: {
+                    legend: {
+                        position: "bottom",
+                        labels: {
+                            color: "#7a7a8c",
+                            font: { size: 12, family: "DM Sans" },
+                            padding: 16,
+                            usePointStyle: true,
+                            pointStyleWidth: 8
+                        }
+                    }
+                }
+            }
         });
 
-        // Budget status bars
+        // Budget bars
         const budgetDiv = document.getElementById("budget-status");
-        budgetDiv.innerHTML = data.budget_status.map(b => {
-            const color = b.percent_used >= 100 ? "#e17055" : b.percent_used >= 80 ? "#fdcb6e" : "#00b894";
-            return `
+        if (data.budget_status.length === 0) {
+            budgetDiv.innerHTML = `<p style="color:var(--muted);font-size:13px;">No budgets set yet.</p>`;
+        } else {
+            budgetDiv.innerHTML = data.budget_status.map(b => {
+                const color = b.percent_used >= 100 ? "var(--red)" : b.percent_used >= 80 ? "var(--gold)" : "var(--green)";
+                return `
                 <div class="budget-row">
                     <div class="budget-header">
-                        <span>${b.category}</span>
-                        <span>KES ${b.spent.toLocaleString()} / ${b.budget.toLocaleString()}</span>
+                        <span class="budget-cat">${b.category}</span>
+                        <span class="budget-amt">KES ${b.spent.toLocaleString()} / ${b.budget.toLocaleString()}</span>
                     </div>
                     <div class="budget-bar-bg">
-                        <div class="budget-bar" style="width:${Math.min(b.percent_used, 100)}%; background:${color};"></div>
+                        <div class="budget-bar" style="width:${Math.min(b.percent_used,100)}%; background:${color};"></div>
                     </div>
                 </div>`;
-        }).join("");
+            }).join("");
+        }
     }
 
     async function loadInsights() {
         const res = await fetch(`${API}/insights/${USER_ID}?month=${MONTH}`);
         const insights = await res.json();
-        document.getElementById("insights-container").innerHTML = insights.map(i =>
-            `<div class="insight ${i.type}">💡 ${i.message}</div>`
-        ).join("") || "<p style='color:#aaa;font-size:12px;'>No insights yet. Add more transactions.</p>";
+        const container = document.getElementById("insights-container");
+        if (insights.length === 0) {
+            container.innerHTML = `<p style="color:var(--muted);font-size:13px;">No insights yet. Add more transactions.</p>`;
+        } else {
+            container.innerHTML = insights.map(i =>
+                `<div class="insight ${i.type}"><div class="insight-dot"></div><span>${i.message}</span></div>`
+            ).join("");
+        }
     }
 
     async function loadTransactions() {
@@ -356,18 +632,18 @@
         const expenses = await expRes.json();
 
         const all = [
-            ...income.map(i => ({ date: i.income_date, type: "income", cat: i.source, desc: "-", amount: i.amount })),
-            ...expenses.map(e => ({ date: e.expense_date, type: "expense", cat: e.category, desc: e.description, amount: e.amount }))
-        ].sort((a, b) => new Date(b.date) - new Date(a.date));
+            ...income.map(i => ({ date: i.income_date, type: "income", cat: i.source, desc: "—", amount: i.amount })),
+            ...expenses.map(e => ({ date: e.expense_date, type: "expense", cat: e.category, desc: e.description || "—", amount: e.amount }))
+        ].sort((a, b) => new Date(b.date) - new Date(a.date)).slice(0, 15);
 
         document.getElementById("transactions-body").innerHTML = all.map(t => `
             <tr>
-                <td>${new Date(t.date).toLocaleDateString()}</td>
+                <td style="color:var(--muted);">${new Date(t.date).toLocaleDateString("en-GB", {day:"2-digit",month:"short"})}</td>
                 <td><span class="badge ${t.type}">${t.type}</span></td>
-                <td>${t.cat}</td>
-                <td>${t.desc}</td>
-                <td style="font-weight:600; color:${t.type === 'income' ? '#00b894' : '#e17055'}">
-                    ${t.type === 'income' ? '+' : '-'} KES ${parseFloat(t.amount).toLocaleString()}
+                <td style="font-weight:500;">${t.cat}</td>
+                <td style="color:var(--muted);">${t.desc}</td>
+                <td style="text-align:right;font-weight:500;color:${t.type==='income'?'var(--green)':'var(--red)'};">
+                    ${t.type==='income'?'+':'-'} KES ${parseFloat(t.amount).toLocaleString()}
                 </td>
             </tr>`).join("");
     }
@@ -379,8 +655,8 @@
             amount: document.getElementById("income-amount").value,
             income_date: document.getElementById("income-date").value
         };
+        if (!body.source || !body.amount || !body.income_date) { alert("Please fill all fields."); return; }
         await fetch(`${API}/income`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-        alert("Income added!");
         location.reload();
     }
 
@@ -392,8 +668,8 @@
             expense_date: document.getElementById("expense-date").value,
             description: document.getElementById("expense-desc").value
         };
+        if (!body.amount || !body.expense_date) { alert("Please fill all fields."); return; }
         await fetch(`${API}/expenses`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-        alert("Expense added!");
         location.reload();
     }
 
@@ -404,16 +680,14 @@
             budget_amount: document.getElementById("budget-amount").value,
             month_year: MONTH
         };
+        if (!body.budget_amount) { alert("Please enter a budget amount."); return; }
         await fetch(`${API}/budgets`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
-        alert("Budget set!");
         location.reload();
     }
 
-    // Load everything on page open
     loadDashboard();
     loadInsights();
     loadTransactions();
 </script>
-
 </body>
 </html>
