@@ -1,4 +1,8 @@
+
+from dotenv import load_dotenv
 import os
+from dotenv import load_dotenv
+load_dotenv()
 import mysql.connector
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -6,12 +10,11 @@ from AI import generate_insights
 
 def get_connection():
     return mysql.connector.connect(
-        host="localhost",
-        user="root",
-        password="@Wango005",
-        database="finance_tracker"
+        host=os.getenv("DB_HOST"),
+        user=os.getenv("DB_USER"),
+        password=os.getenv("DB_PASSWORD"),
+        database=os.getenv("DB_NAME")
     )
-
 app = Flask(__name__)
 CORS(app, resources={r"/*": {"origins": "*"}})
 
