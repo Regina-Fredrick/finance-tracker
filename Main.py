@@ -26,6 +26,12 @@ def index():
 def frontend():
     return send_from_directory(".", "index.html")
 
+@app.route("/dashboard_bg.jpeg")
+def bg_image():
+    return send_from_directory(".", "dashboard_bg.jpeg")
+@app.route("/login.jpeg")
+def login_bg_image():
+    return send_from_directory(".", "login.jpeg")
 @app.route("/logout")
 def logout():
     return '''<script>localStorage.removeItem("user_id");localStorage.removeItem("user_name");window.location.href="/";</script>'''
@@ -58,7 +64,39 @@ def register():
         return jsonify({"error": str(e)}), 400
     finally:
         conn.close()
+@app.route("/users/<int:user_id>", methods=["GET"])
+def get_user(user_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT user_id, full_name, email FROM users WHERE user_id = %s", (user_id,))
+    user = cursor.fetchone()
+    conn.close()
+    if user:
+        return jsonify(user)
+    return jsonify({"error": "User not found"}), 404
 
+@app.route("/users/update/<int:user_id>", methods=["PUT"])
+def update_user(user_id):
+    data = request.get_json()
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        if data.get("password"):
+            cursor.execute(
+                "UPDATE users SET full_name=%s, email=%s, password=%s WHERE user_id=%s",
+                (data["full_name"], data["email"], data["password"], user_id)
+            )
+        else:
+            cursor.execute(
+                "UPDATE users SET full_name=%s, email=%s WHERE user_id=%s",
+                (data["full_name"], data["email"], user_id)
+            )
+        conn.commit()
+        return jsonify({"message": "Profile updated successfully"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        conn.close()
 @app.route("/users/login", methods=["POST"])
 def login():
     data = request.get_json()
@@ -81,8 +119,8 @@ def add_income():
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO income (user_id, source, amount, income_date) VALUES (%s, %s, %s, %s)",
-            (data["user_id"], data["source"], data["amount"], data["income_date"])
+            "INSERT INTO income (user_id, source, amount, income_date, is_recurring) VALUES (%s, %s, %s, %s, %s)",
+            (data["user_id"], data["source"], data["amount"], data["income_date"], data.get("is_recurring", False))
         )
         conn.commit()
         return jsonify({"message": "Income added successfully"}), 201
@@ -90,7 +128,6 @@ def add_income():
         return jsonify({"error": str(e)}), 400
     finally:
         conn.close()
-
 @app.route("/income/<int:user_id>", methods=["GET"])
 def get_income(user_id):
     conn = get_connection()
@@ -99,6 +136,26 @@ def get_income(user_id):
     income = cursor.fetchall()
     conn.close()
     return jsonify(income)
+@app.route("/income/delete/<int:income_id>", methods=["DELETE"])
+def delete_income(income_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM income WHERE income_id = %s", (income_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Income deleted"}), 200
+@app.route("/income/update/<int:income_id>", methods=["PUT"])
+def update_income(income_id):
+    data = request.get_json()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE income SET source=%s, amount=%s, income_date=%s WHERE income_id=%s",
+        (data["source"], data["amount"], data["income_date"], income_id)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Income updated"}), 200
 
 @app.route("/expenses", methods=["POST"])
 def add_expense():
@@ -107,8 +164,8 @@ def add_expense():
     cursor = conn.cursor()
     try:
         cursor.execute(
-            "INSERT INTO expenses (user_id, category, amount, expense_date, description) VALUES (%s, %s, %s, %s, %s)",
-            (data["user_id"], data["category"], data["amount"], data["expense_date"], data["description"])
+            "INSERT INTO expenses (user_id, category, amount, expense_date, description, is_recurring) VALUES (%s, %s, %s, %s, %s, %s)",
+            (data["user_id"], data["category"], data["amount"], data["expense_date"], data["description"], data.get("is_recurring", False))
         )
         conn.commit()
         return jsonify({"message": "Expense added successfully"}), 201
@@ -125,6 +182,26 @@ def get_expenses(user_id):
     expenses = cursor.fetchall()
     conn.close()
     return jsonify(expenses)
+@app.route("/expenses/delete/<int:expense_id>", methods=["DELETE"])
+def delete_expense(expense_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM expenses WHERE expense_id = %s", (expense_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Expense deleted"}), 200
+@app.route("/expenses/update/<int:expense_id>", methods=["PUT"])
+def update_expense(expense_id):
+    data = request.get_json()
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute(
+        "UPDATE expenses SET category=%s, amount=%s, expense_date=%s, description=%s WHERE expense_id=%s",
+        (data["category"], data["amount"], data["expense_date"], data["description"], expense_id)
+    )
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Expense updated"}), 200
 
 @app.route("/budgets", methods=["POST"])
 def add_budget():
@@ -155,10 +232,46 @@ def get_budgets(user_id):
     budgets = cursor.fetchall()
     conn.close()
     return jsonify(budgets)
+def process_recurring(user_id, month):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
 
+    cursor.execute(
+        "SELECT DISTINCT source, amount FROM income WHERE user_id=%s AND is_recurring=1",
+        (user_id,)
+    )
+    for r in cursor.fetchall():
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM income WHERE user_id=%s AND source=%s AND is_recurring=1 AND DATE_FORMAT(income_date, '%%Y-%%m')=%s",
+            (user_id, r["source"], month)
+        )
+        if cursor.fetchone()["cnt"] == 0:
+            cursor.execute(
+                "INSERT INTO income (user_id, source, amount, income_date, is_recurring) VALUES (%s, %s, %s, %s, 1)",
+                (user_id, r["source"], r["amount"], f"{month}-01")
+            )
+
+    cursor.execute(
+        "SELECT DISTINCT category, amount, description FROM expenses WHERE user_id=%s AND is_recurring=1",
+        (user_id,)
+    )
+    for r in cursor.fetchall():
+        cursor.execute(
+            "SELECT COUNT(*) AS cnt FROM expenses WHERE user_id=%s AND category=%s AND is_recurring=1 AND DATE_FORMAT(expense_date, '%%Y-%%m')=%s",
+            (user_id, r["category"], month)
+        )
+        if cursor.fetchone()["cnt"] == 0:
+            cursor.execute(
+                "INSERT INTO expenses (user_id, category, amount, expense_date, description, is_recurring) VALUES (%s, %s, %s, %s, %s, 1)",
+                (user_id, r["category"], r["amount"], f"{month}-01", r["description"])
+            )
+
+    conn.commit()
+    conn.close()
 @app.route("/dashboard/<int:user_id>", methods=["GET"])
 def dashboard(user_id):
     month = request.args.get("month", "2025-06")
+    process_recurring(user_id, month)  
     conn = get_connection()
     cursor = conn.cursor(dictionary=True)
 
