@@ -229,8 +229,8 @@
         <h2>Finance_Tracker <span id="greeting-sub"></span></h2>
        <div style="display:flex; align-items:center; gap:12px;">
     <input type="month" id="month-picker" class="month-badge" style="cursor:pointer;" onchange="changeMonth()">
-    <div style="position:relative;">
-        <div onclick="toggleNotifications()" style="cursor:pointer; font-size:22px; position:relative;">
+ <div style="position:relative; z-index:300;">
+       <div class="notif-bell" onclick="toggleNotifications()" style="cursor:pointer; font-size:22px; position:relative;">
             🔔
             <span id="notif-count" style="position:absolute; top:-6px; right:-6px; background:var(--red); color:#fff; border-radius:50%; font-size:10px; width:16px; height:16px; display:none; align-items:center; justify-content:center;">0</span>
         </div>
