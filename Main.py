@@ -1,8 +1,7 @@
 
-from dotenv import load_dotenv
 import os
 from dotenv import load_dotenv
-load_dotenv()
+load_dotenv()  # only loads .env locally, ignored on Render
 import mysql.connector
 from flask import Flask, request, jsonify, send_from_directory
 from flask_cors import CORS
@@ -320,7 +319,57 @@ def dashboard(user_id):
         "expenses_by_category": [{"category": c["category"], "spent": float(c["spent"])} for c in by_category],
         "budget_status": budget_status
     })
+@app.route("/goals/<int:user_id>", methods=["GET"])
+def get_goals(user_id):
+    conn = get_connection()
+    cursor = conn.cursor(dictionary=True)
+    cursor.execute("SELECT * FROM savings_goals WHERE user_id = %s", (user_id,))
+    goals = cursor.fetchall()
+    conn.close()
+    return jsonify(goals)
 
+@app.route("/goals", methods=["POST"])
+def add_goal():
+    data = request.get_json()
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO savings_goals (user_id, goal_name, target_amount, saved_amount, deadline) VALUES (%s, %s, %s, %s, %s)",
+            (data["user_id"], data["goal_name"], data["target_amount"], data.get("saved_amount", 0), data["deadline"])
+        )
+        conn.commit()
+        return jsonify({"message": "Goal added successfully"}), 201
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        conn.close()
+
+@app.route("/goals/update/<int:goal_id>", methods=["PUT"])
+def update_goal(goal_id):
+    data = request.get_json()
+    conn = get_connection()
+    cursor = conn.cursor()
+    try:
+        cursor.execute(
+            "UPDATE savings_goals SET saved_amount=%s WHERE goal_id=%s",
+            (data["saved_amount"], goal_id)
+        )
+        conn.commit()
+        return jsonify({"message": "Goal updated"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 400
+    finally:
+        conn.close()
+
+@app.route("/goals/delete/<int:goal_id>", methods=["DELETE"])
+def delete_goal(goal_id):
+    conn = get_connection()
+    cursor = conn.cursor()
+    cursor.execute("DELETE FROM savings_goals WHERE goal_id = %s", (goal_id,))
+    conn.commit()
+    conn.close()
+    return jsonify({"message": "Goal deleted"}), 200
 @app.route("/insights/<int:user_id>", methods=["GET"])
 def get_insights(user_id):
     month = request.args.get("month", "2025-06")

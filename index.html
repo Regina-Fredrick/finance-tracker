@@ -205,6 +205,7 @@
     </div>
 
     <div class="nav-item" onclick="showSection('budgets-section')"><span class="nav-icon">◎</span> Budgets</div>
+    <div class="nav-item" onclick="showSection('goals-section')"><span class="nav-icon">🎯</span> Savings Goals</div>
     <div class="nav-item" onclick="showSection('analytics-section')"><span class="nav-icon">📊</span> Analytics</div>
     <div class="nav-item" onclick="showSection('insights-section')"><span class="nav-icon">✦</span> Insights</div>
 
@@ -377,7 +378,28 @@
             </div>
         </div>
     </div>
-
+<!-- Savings Goals -->
+    <div class="section" id="goals-section">
+        <div class="card" style="margin-bottom:16px;">
+            <div class="card-title">Add New Goal</div>
+            <div class="grid3">
+                <div class="form-group">
+                    <label>Goal Name</label>
+                    <input type="text" id="goal-name" placeholder="e.g. Emergency Fund">
+                </div>
+                <div class="form-group">
+                    <label>Target Amount (KES)</label>
+                    <input type="number" id="goal-target" placeholder="0.00">
+                </div>
+                <div class="form-group">
+                    <label>Deadline</label>
+                    <input type="date" id="goal-deadline">
+                </div>
+            </div>
+            <button class="btn" style="max-width:200px;" onclick="addGoal()">Add Goal</button>
+        </div>
+        <div id="goals-container"><p style="color:var(--muted);font-size:13px;">No goals yet.</p></div>
+    </div>
     <!-- Analytics -->
     <div class="section" id="analytics-section">
         <div class="card">
@@ -690,6 +712,70 @@ async function openProfileModal() {
         a.click();
         URL.revokeObjectURL(url);
     }
+    async function loadGoals() {
+        const res = await fetch(`${API}/goals/${USER_ID}`);
+        const goals = await res.json();
+        const container = document.getElementById("goals-container");
+        if (goals.length === 0) {
+            container.innerHTML = `<p style="color:var(--muted);font-size:13px;">No goals yet. Add one above!</p>`;
+            return;
+        }
+        container.innerHTML = goals.map(g => {
+            const percent = Math.min((g.saved_amount / g.target_amount) * 100, 100).toFixed(1);
+            const color = percent >= 100 ? "var(--green)" : percent >= 50 ? "var(--gold)" : "var(--blue)";
+            const deadline = new Date(g.deadline).toLocaleDateString("en-GB", {day:"2-digit", month:"short", year:"numeric"});
+            return `
+            <div class="card" style="margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:12px;">
+                    <div>
+                        <p style="font-weight:500; font-size:15px;">🎯 ${g.goal_name}</p>
+                        <p style="font-size:12px; color:var(--muted);">Deadline: ${deadline}</p>
+                    </div>
+                    <div style="text-align:right;">
+                        <p style="font-size:13px;">KES ${parseFloat(g.saved_amount).toLocaleString()} / ${parseFloat(g.target_amount).toLocaleString()}</p>
+                        <p style="font-size:12px; color:${color};">${percent}% complete</p>
+                    </div>
+                </div>
+                <div class="budget-bar-bg">
+                    <div class="budget-bar" style="width:${percent}%; background:${color};"></div>
+                </div>
+                <div style="display:flex; gap:8px; margin-top:12px;">
+                    <input type="number" id="saved-${g.goal_id}" placeholder="Add amount saved" style="flex:1;">
+                    <button class="btn" style="width:auto; padding:10px 16px;" onclick="updateGoal(${g.goal_id}, ${g.saved_amount})">+ Add</button>
+                    <button class="btn secondary" style="width:auto; padding:10px 16px;" onclick="deleteGoal(${g.goal_id})">🗑</button>
+                </div>
+            </div>`;
+        }).join("");
+    }
+
+    async function addGoal() {
+        const body = {
+            user_id: USER_ID,
+            goal_name: document.getElementById("goal-name").value,
+            target_amount: document.getElementById("goal-target").value,
+            deadline: document.getElementById("goal-deadline").value
+        };
+        if (!body.goal_name || !body.target_amount || !body.deadline) { alert("Please fill all fields."); return; }
+        await fetch(`${API}/goals`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify(body) });
+        loadGoals();
+        document.getElementById("goal-name").value = "";
+        document.getElementById("goal-target").value = "";
+        document.getElementById("goal-deadline").value = "";
+    }
+
+    async function updateGoal(goal_id, current_saved) {
+        const added = parseFloat(document.getElementById(`saved-${goal_id}`).value);
+        if (!added || added <= 0) { alert("Please enter a valid amount."); return; }
+        const new_saved = current_saved + added;
+        await fetch(`${API}/goals/update/${goal_id}`, { method: "PUT", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ saved_amount: new_saved }) });
+        loadGoals();
+    }
+
+    async function deleteGoal(goal_id) {
+        if (!confirm("Delete this goal?")) return;
+        await fetch(`${API}/goals/delete/${goal_id}`, { method: "DELETE" });
+        loadGoals();
+    }
     function logout() {
         localStorage.removeItem("user_id");
         localStorage.removeItem("user_name");
@@ -697,9 +783,10 @@ async function openProfileModal() {
         window.location.href = "/";
     }
 
-    loadDashboard();
+   loadDashboard();
     loadInsights();
     loadTransactions();
+    loadGoals();
 </script>
 </body>
 </html>
