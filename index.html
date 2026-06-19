@@ -6,6 +6,8 @@
     <title>Finance_Tracker</title>
     <link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.31/jspdf.plugin.autotable.min.js"></script>
     <style>
         :root {
             --bg: #ffffff;
@@ -201,6 +203,7 @@
             <div class="nav-item" onclick="showSection('charts-section')"><span class="nav-icon">◎</span> Charts</div>
             <div class="nav-item" onclick="showSection('budget-status-section')"><span class="nav-icon">◈</span> Budget Status</div>
             <div class="nav-item" onclick="showSection('transactions-section')"><span class="nav-icon">↕</span> Transactions</div>
+            <div class="nav-item" onclick="downloadPDF()"><span class="nav-icon">📄</span> PDF Report</div>
         </div>
     </div>
 
@@ -856,6 +859,77 @@ async function openProfileModal() {
                 </div>
             `).join("");
         }
+    }
+    async function downloadPDF() {
+        const { jsPDF } = window.jspdf;
+        const doc = new jsPDF();
+
+        const name = USER_NAME;
+        const month = MONTH;
+
+        // Title
+        doc.setFontSize(20);
+        doc.setTextColor(26, 115, 232);
+        doc.text("Finance_Tracker", 14, 20);
+        doc.setFontSize(12);
+        doc.setTextColor(100);
+        doc.text(`Financial Report — ${month}`, 14, 28);
+        doc.text(`Generated for: ${name}`, 14, 35);
+
+        // Summary
+        doc.setFontSize(14);
+        doc.setTextColor(0);
+        doc.text("Summary", 14, 48);
+        doc.autoTable({
+            startY: 52,
+            head: [["Metric", "Amount"]],
+            body: [
+                ["Total Income", `KES ${dashboardData.total_income.toLocaleString()}`],
+                ["Total Expenses", `KES ${dashboardData.total_expenses.toLocaleString()}`],
+                ["Net Savings", `KES ${dashboardData.savings.toLocaleString()}`],
+                ["Savings Rate", `${dashboardData.savings_rate}%`]
+            ],
+            theme: "grid",
+            headStyles: { fillColor: [26, 115, 232] }
+        });
+
+        // Budget Status
+        if (dashboardData.budget_status.length > 0) {
+            doc.text("Budget Status", 14, doc.lastAutoTable.finalY + 14);
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 18,
+                head: [["Category", "Budget", "Spent", "Remaining", "% Used"]],
+                body: dashboardData.budget_status.map(b => [
+                    b.category,
+                    `KES ${b.budget.toLocaleString()}`,
+                    `KES ${b.spent.toLocaleString()}`,
+                    `KES ${b.remaining.toLocaleString()}`,
+                    `${b.percent_used}%`
+                ]),
+                theme: "grid",
+                headStyles: { fillColor: [26, 115, 232] }
+            });
+        }
+
+        // Transactions
+        if (allTransactions.length > 0) {
+            doc.text("Transactions", 14, doc.lastAutoTable.finalY + 14);
+            doc.autoTable({
+                startY: doc.lastAutoTable.finalY + 18,
+                head: [["Date", "Type", "Category/Source", "Description", "Amount"]],
+                body: allTransactions.map(t => [
+                    new Date(t.date).toLocaleDateString("en-GB", {day:"2-digit", month:"short"}),
+                    t.type,
+                    t.cat,
+                    t.desc,
+                    `${t.type === "income" ? "+" : "-"} KES ${parseFloat(t.amount).toLocaleString()}`
+                ]),
+                theme: "grid",
+                headStyles: { fillColor: [26, 115, 232] }
+            });
+        }
+
+        doc.save(`Finance_Tracker_Report_${month}.pdf`);
     }
     function logout() {
         localStorage.removeItem("user_id");
