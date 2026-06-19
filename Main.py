@@ -375,66 +375,7 @@ def get_insights(user_id):
     month = request.args.get("month", "2025-06")
     insights = generate_insights(user_id, month)
     return jsonify(insights)
-# Add account
-@app.route("/accounts", methods=["POST"])
-def add_account():
-    data = request.get_json()
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "INSERT INTO accounts (user_id, account_name, account_type, balance) VALUES (%s, %s, %s, %s)",
-            (data["user_id"], data["account_name"], data["account_type"], data["balance"])
-        )
-        conn.commit()
-        return jsonify({"message": "Account added successfully"}), 201
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-    finally:
-        conn.close()
 
-# Get all accounts for a user
-@app.route("/accounts/<int:user_id>", methods=["GET"])
-def get_accounts(user_id):
-    conn = get_connection()
-    cursor = conn.cursor(dictionary=True)
-    cursor.execute("SELECT * FROM accounts WHERE user_id = %s", (user_id,))
-    accounts = cursor.fetchall()
-    conn.close()
-    total = sum(float(a["balance"]) for a in accounts)
-    return jsonify({"accounts": accounts, "total_balance": total})
-
-# Update account balance
-@app.route("/accounts/<int:account_id>", methods=["PUT"])
-def update_account(account_id):
-    data = request.get_json()
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-            "UPDATE accounts SET balance = %s WHERE account_id = %s",
-            (data["balance"], account_id)
-        )
-        conn.commit()
-        return jsonify({"message": "Account updated successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-    finally:
-        conn.close()
-
-# Delete account
-@app.route("/accounts/<int:account_id>", methods=["DELETE"])
-def delete_account(account_id):
-    conn = get_connection()
-    cursor = conn.cursor()
-    try:
-        cursor.execute("DELETE FROM accounts WHERE account_id = %s", (account_id,))
-        conn.commit()
-        return jsonify({"message": "Account deleted successfully"})
-    except Exception as e:
-        return jsonify({"error": str(e)}), 400
-    finally:
-        conn.close()
 if __name__ == "__main__":
     port = int(os.environ.get("PORT", 5000))
     app.run(host="0.0.0.0", port=port, debug=False)
